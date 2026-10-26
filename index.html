@@ -273,6 +273,25 @@
         </table>
       </div>
 
+      <!-- Cloud & GitHub Sync Panel -->
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin: 20px 0;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;">🔗 Cloud & GitHub Auto-Sync Integrations</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Live Google Sheet Webhook URL</label>
+            <input type="text" id="setting-webhook-url" class="form-control" style="font-size: 0.85rem; padding: 8px;" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+          <div>
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">GitHub Personal Access Token</label>
+            <input type="password" id="setting-github-token" class="form-control" style="font-size: 0.85rem; padding: 8px;" placeholder="ghp_...">
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="btn-save-settings" class="btn btn-primary btn-sm">💾 Save Settings</button>
+          <button id="btn-sync-to-github" class="btn btn-secondary btn-sm">🚀 Push All Submissions to GitHub `submissions/`</button>
+        </div>
+      </div>
+
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 12px;">
         <button id="btn-clear-submissions" class="btn btn-secondary btn-sm" style="color: var(--danger);">
           🗑 Clear All Records
