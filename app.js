@@ -60,6 +60,16 @@ function setupEventListeners() {
   document.getElementById("btn-export-all-excel").addEventListener("click", exportAllSubmissionsExcel);
   document.getElementById("btn-clear-submissions").addEventListener("click", clearAllSubmissions);
 
+  // Settings & GitHub Sync
+  const btnSaveSettings = document.getElementById("btn-save-settings");
+  if (btnSaveSettings) {
+    btnSaveSettings.addEventListener("click", saveIntegrationSettings);
+  }
+  const btnSyncGithub = document.getElementById("btn-sync-to-github");
+  if (btnSyncGithub) {
+    btnSyncGithub.addEventListener("click", pushAllSubmissionsToGitHub);
+  }
+
   // Review Filters
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -181,9 +191,10 @@ function renderCurrentQuestion() {
     optDiv.className = `option-item ${isSelected ? "selected" : ""}`;
     optDiv.setAttribute("role", "button");
     optDiv.setAttribute("tabindex", "0");
+    const displayLabel = optText === letters[idx] ? `Option ${letters[idx]}` : optText;
     optDiv.innerHTML = `
       <span class="option-letter">${letters[idx]}</span>
-      <span class="option-text">${escapeHtml(optText)}</span>
+      <span class="option-text">${escapeHtml(displayLabel)}</span>
     `;
 
     optDiv.addEventListener("click", () => selectOption(q.id, idx));
@@ -366,10 +377,11 @@ function submitQuiz() {
   // Save to Local Submissions Store
   saveSubmissionRecord(state.results);
 
-  // Auto trigger Webhook if configured
-  if (QUIZ_CONFIG.webhookUrl) {
-    sendWebhookPayload(state.results);
-  }
+  // 1. Auto trigger Live Master Spreadsheet sync (Webhook)
+  sendWebhookPayload(state.results);
+
+  // 2. Auto trigger commit to GitHub submissions/ folder
+  commitSubmissionToGitHub(state.results);
 
   // Render Results Screen
   renderResultsScreen();
@@ -627,6 +639,7 @@ function updateSubmissionsCountBadge() {
 function openAdminModal() {
   const modal = document.getElementById("admin-modal");
   renderAdminTable();
+  loadIntegrationSettings();
   modal.classList.add("active");
 }
 
@@ -759,22 +772,141 @@ function retakeQuiz() {
   }
 }
 
-// OPTIONAL GOOGLE APPS SCRIPT WEBHOOK SYNC
-function sendWebhookPayload(results) {
-  if (!QUIZ_CONFIG.webhookUrl) return;
+// INTEGRATION SETTINGS (Live Master Spreadsheet & GitHub Submissions)
+const SETTING_WEBHOOK_KEY = "edmissions_webhook_url";
+const SETTING_GITHUB_TOKEN_KEY = "edmissions_github_token";
 
-  fetch(QUIZ_CONFIG.webhookUrl, {
+function loadIntegrationSettings() {
+  const urlInp = document.getElementById("setting-webhook-url");
+  const tokenInp = document.getElementById("setting-github-token");
+  if (urlInp) {
+    urlInp.value = localStorage.getItem(SETTING_WEBHOOK_KEY) || QUIZ_CONFIG.webhookUrl || "";
+  }
+  if (tokenInp) {
+    tokenInp.value = localStorage.getItem(SETTING_GITHUB_TOKEN_KEY) || "";
+  }
+}
+
+function saveIntegrationSettings() {
+  const urlInp = document.getElementById("setting-webhook-url");
+  const tokenInp = document.getElementById("setting-github-token");
+  if (urlInp) {
+    localStorage.setItem(SETTING_WEBHOOK_KEY, urlInp.value.trim());
+    QUIZ_CONFIG.webhookUrl = urlInp.value.trim();
+  }
+  if (tokenInp) {
+    localStorage.setItem(SETTING_GITHUB_TOKEN_KEY, tokenInp.value.trim());
+  }
+  showToast("Integration settings saved successfully!");
+}
+
+// 1. LIVE MASTER SPREADSHEET (WEBHOOK)
+function sendWebhookPayload(results) {
+  const webhookUrl = localStorage.getItem(SETTING_WEBHOOK_KEY) || QUIZ_CONFIG.webhookUrl;
+  if (!webhookUrl) return;
+
+  fetch(webhookUrl, {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(results)
   })
     .then(() => {
-      console.log("Results synced to remote webhook / Google Sheets!");
+      console.log("Results synced to remote Live Master Spreadsheet!");
+      showToast("Synced to Live Master Spreadsheet!");
     })
     .catch((err) => {
       console.warn("Webhook sync note:", err);
     });
+}
+
+// 2. GITHUB SUBMISSIONS FOLDER COMMIT
+async function commitSubmissionToGitHub(results) {
+  const token = localStorage.getItem(SETTING_GITHUB_TOKEN_KEY);
+  if (!token) return;
+
+  const safeName = (results.student.name || "Student").replace(/[^a-zA-Z0-9]/g, "_");
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filename = `submissions/${safeName}_${timestamp}.json`;
+
+  const payload = {
+    metadata: {
+      student: results.student,
+      date: results.formattedDate,
+      duration: results.durationStr,
+      overallScore: `${results.overallScore} / ${results.totalQuestions}`,
+      percentage: `${results.percentScore}%`,
+      readinessTier: results.performanceTier,
+      sectionScores: results.sectionScores
+    },
+    itemizedResponses: QUESTIONS.map((q, idx) => {
+      const letters = ["A", "B", "C", "D"];
+      const userChoice = results.userAnswers[q.id];
+      const isAnswered = userChoice !== undefined;
+      return {
+        questionNumber: idx + 1,
+        section: q.sectionName,
+        question: q.text,
+        studentAnswer: isAnswered ? `${letters[userChoice]}. ${q.options[userChoice]}` : "(Unanswered)",
+        correctAnswer: `${letters[q.correctIndex]}. ${q.options[q.correctIndex]}`,
+        isCorrect: userChoice === q.correctIndex,
+        explanation: q.explanation
+      };
+    })
+  };
+
+  const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/SukantaJeet/readiness-assessment/contents/${filename}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${token}`,
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `Add assessment submission for ${results.student.name}`,
+        content: contentBase64,
+        branch: "main"
+      })
+    });
+
+    if (res.ok) {
+      console.log(`Saved report to GitHub: ${filename}`);
+      showToast(`Copy of report saved to GitHub repository submissions/!`);
+    } else {
+      console.warn("GitHub commit error:", await res.text());
+    }
+  } catch (err) {
+    console.warn("GitHub API fetch error:", err);
+  }
+}
+
+// Push all historical local submissions to GitHub
+async function pushAllSubmissionsToGitHub() {
+  const token = localStorage.getItem(SETTING_GITHUB_TOKEN_KEY);
+  if (!token) {
+    showToast("Please enter and save your GitHub Personal Access Token first.", "warning");
+    return;
+  }
+
+  const records = getSubmissionsRecords();
+  if (records.length === 0) {
+    showToast("No saved submissions to push.", "warning");
+    return;
+  }
+
+  showToast(`Pushing ${records.length} submissions to GitHub...`);
+  let successCount = 0;
+
+  for (const rec of records) {
+    await commitSubmissionToGitHub(rec);
+    successCount++;
+    await new Promise((r) => setTimeout(r, 600)); // avoid rate limiting
+  }
+
+  showToast(`Successfully pushed ${successCount} submissions to GitHub!`);
 }
 
 // UTILITIES
