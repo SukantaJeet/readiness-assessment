@@ -5,8 +5,8 @@ const QUIZ_CONFIG = {
   tagline: "Imagine. Build. Become.",
   description: "Hi there! Welcome to EdMissions! This assessment is an opportunity for us to get to know you better—your interests, strengths, and aspirations. It covers three areas: General Aptitude, English Readiness, and Math Readiness. Take your time, read each question carefully, and answer to the best of your ability. Good luck!",
   passingScorePercent: 60,
-  timeLimitMinutes: 45, // 45 minutes total (optional timer)
-  webhookUrl: "" // Optional Google Sheets Webhook URL (leave empty if not configured)
+  timeLimitMinutes: 45,
+  webhookUrl: ""
 };
 
 const QUIZ_SECTIONS = [
@@ -80,12 +80,13 @@ const QUESTIONS = [
     id: 7,
     section: "aptitude",
     sectionName: "General Aptitude",
-    text: "Study the sequence and choose the option that continues the rotation: The arrow in the square rotates 90° clockwise in each consecutive step (Step 1: Pointing Up ↑, Step 2: Pointing Right →, Step 3: Pointing Down ↓). What is the next position?",
+    text: "7. Study the sequence and choose the option that continues the rotation.",
+    image: "images/q7.png",
     options: [
-      "Pointing Left (←)",
-      "Pointing Up (↑)",
-      "Pointing Down-Right (↘)",
-      "Pointing Up-Left (↖)"
+      "A",
+      "B",
+      "C",
+      "D"
     ],
     svgDiagram: `
       <div class="visual-diagram-box">
@@ -99,14 +100,15 @@ const QUESTIONS = [
       </div>
     `,
     correctIndex: 0,
-    explanation: "The symbol rotates 90 degrees clockwise at each step: Up (0°) → Right (90°) → Down (180°) → Left (270°). Therefore, the next position is Pointing Left (←)."
+    explanation: "The shape rotates 90 degrees clockwise at each step. Option A correctly completes the sequence."
   },
   {
     id: 8,
     section: "aptitude",
     sectionName: "General Aptitude",
-    text: "Identify the rule across the rows and columns, then choose the missing cell in the 3x3 matrix: Row 1: [Circle, Triangle, Square]. Row 2: [Triangle, Square, Circle]. Row 3: [Square, Circle, ?]. Which shape completes the pattern?",
-    options: ["Triangle", "Square", "Circle", "Diamond"],
+    text: "8. Identify the rule across the rows and columns, then choose the missing cell.",
+    image: "images/q8.png",
+    options: ["A", "B", "C", "D"],
     svgDiagram: `
       <div class="visual-diagram-box">
         <div class="diagram-title">Pattern Matrix:</div>
@@ -118,7 +120,7 @@ const QUESTIONS = [
       </div>
     `,
     correctIndex: 0,
-    explanation: "Each row and each column contains exactly one Circle, one Triangle, and one Square. In the third row, we have Square and Circle, so the missing shape is Triangle."
+    explanation: "Analyzing row by row and column by column reveals the cyclic distribution rule. Option A completes the pattern."
   },
   {
     id: 9,
