@@ -150,9 +150,19 @@ function renderCurrentQuestion() {
   // Question Text
   document.getElementById("question-text").textContent = q.text;
 
-  // SVG Diagram (if exists)
+  // Diagram or Image Box
   const diagramBox = document.getElementById("question-diagram-container");
-  if (q.svgDiagram) {
+  if (q.image) {
+    diagramBox.innerHTML = `
+      <div class="question-image-box" style="text-align: center; margin: 16px 0;">
+        <img src="${q.image}" alt="Problem Diagram" class="question-problem-img" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);" onerror="this.style.display='none'; const fb = document.getElementById('diagram-fallback-${q.id}'); if(fb) fb.style.display='block';">
+        <div id="diagram-fallback-${q.id}" style="${q.image ? 'display: none;' : ''}">
+          ${q.svgDiagram || ''}
+        </div>
+      </div>
+    `;
+    diagramBox.style.display = "block";
+  } else if (q.svgDiagram) {
     diagramBox.innerHTML = q.svgDiagram;
     diagramBox.style.display = "block";
   } else {
