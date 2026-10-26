@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Discovery & Readiness Assessment | EdMissions</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- SheetJS for client-side Excel (.xlsx) file generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-navbar">
+    <div class="nav-container">
+      <div class="brand-badge">
+        <div class="brand-logo">E</div>
+        <div>
+          <div class="brand-title">EdMissions</div>
+          <div class="brand-sub">Discovery & Readiness Assessment</div>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button id="btn-view-admin" class="btn btn-secondary btn-sm" title="View all local submissions & master export">
+          📁 Submissions (<span id="admin-count-badge">0</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-content">
+
+    <!-- VIEW 1: WELCOME & REGISTRATION SCREEN -->
+    <section id="welcome-view" class="view-panel active">
+      <div class="card welcome-card">
+        
+        <div class="hero-banner">
+          <h1>Student Discovery &amp; Readiness Assessment</h1>
+          <p class="hero-sub">Welcome to EdMissions! Imagine. Build. Become.</p>
+        </div>
+
+        <p style="color: var(--text-sub); margin-bottom: 24px; text-align: left;">
+          This assessment is an opportunity for us to get to know you better—your interests, strengths, and aspirations. 
+          It evaluates three essential learning foundations. Take your time, read each question carefully, and answer to the best of your ability.
+        </p>
+
+        <!-- Assessment Areas Overview -->
+        <div class="welcome-info-grid">
+          <div class="info-item">
+            <div class="info-item-icon">🧠</div>
+            <h4>General Aptitude</h4>
+            <p>10 Questions: Pattern recognition, logic, rates, and reasoning.</p>
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">📖</div>
+            <h4>English Readiness</h4>
+            <p>10 Questions: Reading comprehension, vocabulary in context, and grammar.</p>
+          </div>
+          <div class="info-item">
+            <div class="info-item-icon">📐</div>
+            <h4>Math Readiness</h4>
+            <p>10 Questions: Algebraic modeling, geometry, functions, and word problems.</p>
+          </div>
+        </div>
+
+        <!-- Student Registration Form -->
+        <div class="form-section-title">Candidate Registration</div>
+        <form id="student-info-form">
+          <div class="student-form">
+            <div class="form-group full-width">
+              <label for="student-name">Full Name <span class="req">*</span></label>
+              <input type="text" id="student-name" class="form-control" placeholder="e.g. Alex Johnson" required>
+            </div>
+
+            <div class="form-group">
+              <label for="student-grade">Current Grade / Class <span class="req">*</span></label>
+              <input type="text" id="student-grade" class="form-control" placeholder="e.g. Grade 10" required>
+            </div>
+
+            <div class="form-group">
+              <label for="student-contact">Contact Phone Number <span class="req">*</span></label>
+              <input type="tel" id="student-contact" class="form-control" placeholder="e.g. +1 555-019-2834" required>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="student-email">Email Address <span style="font-size: 0.8rem; color: var(--text-muted);">(Optional)</span></label>
+              <input type="email" id="student-email" class="form-control" placeholder="e.g. alex@example.com">
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-size: 1rem;">
+              Begin Assessment →
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: ACTIVE QUIZ VIEW -->
+    <section id="quiz-view" class="view-panel">
+      
+      <!-- Quiz Header / Timer / Section Indicator -->
+      <div class="quiz-header-bar">
+        <div id="current-section-badge" class="section-pill">
+          🧠 General Aptitude
+        </div>
+        <div class="quiz-timer">
+          <span id="quiz-timer-display">⏱ 00:00</span>
+        </div>
+      </div>
+
+      <!-- Overall Progress Bar -->
+      <div class="progress-container">
+        <div class="progress-meta">
+          <span id="progress-count">Question 1 of 30</span>
+          <span id="progress-percent">0% Completed</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="progress-bar-fill" class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="question-container">
+        <div class="question-badge-row">
+          <span id="question-index-tag" class="question-index-tag">QUESTION 1 OF 30</span>
+          <button id="btn-mark-review" class="mark-review-btn">
+            ☆ Mark for Review
+          </button>
+        </div>
+
+        <div id="question-text" class="question-text">
+          Loading question text...
+        </div>
+
+        <!-- Optional Diagram/Visual Box for pattern questions -->
+        <div id="question-diagram-container" style="display: none;"></div>
+
+        <!-- Multiple Choice Options (A, B, C, D) -->
+        <div id="options-list" class="options-list"></div>
+
+        <!-- Navigation Buttons -->
+        <div class="quiz-nav-row">
+          <button id="btn-prev" class="btn btn-secondary">
+            ← Previous
+          </button>
+          <div style="display: flex; gap: 12px;">
+            <button id="btn-next" class="btn btn-primary">
+              Next Question →
+            </button>
+            <button id="btn-submit-quiz" class="btn btn-success" style="display: none;">
+              Submit Assessment ✓
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Jump Palette -->
+      <div class="palette-container">
+        <div class="palette-title">
+          <span>Question Quick Jump</span>
+          <span style="font-weight: normal; font-size: 0.8rem;">Click any number to navigate</span>
+        </div>
+        <div id="palette-grid" class="palette-grid"></div>
+      </div>
+
+    </section>
+
+    <!-- VIEW 3: RESULTS & ANALYTICS VIEW -->
+    <section id="results-view" class="view-panel">
+      <div class="card results-card">
+        
+        <div class="results-hero">
+          <div class="score-circle">
+            <span id="res-score-number" class="score-number">28</span>
+            <span id="res-score-max" class="score-max">/ 30</span>
+          </div>
+          <div id="res-status-badge" class="results-status-badge">
+            Advanced Readiness (93%)
+          </div>
+          <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 4px;">Assessment Complete!</h2>
+          <p style="opacity: 0.85; font-size: 0.95rem;">Your readiness metrics have been calculated.</p>
+        </div>
+
+        <!-- Candidate Info Banner -->
+        <div class="candidate-summary-banner">
+          <div class="cand-item">
+            <label>Candidate Name</label>
+            <span id="res-cand-name">John Doe</span>
+          </div>
+          <div class="cand-item">
+            <label>Grade Level</label>
+            <span id="res-cand-grade">Grade 10</span>
+          </div>
+          <div class="cand-item">
+            <label>Contact</label>
+            <span id="res-cand-contact">+1 234-567-890</span>
+          </div>
+          <div class="cand-item">
+            <label>Time Taken</label>
+            <span id="res-cand-time">24m 12s</span>
+          </div>
+        </div>
+
+        <!-- Section Breakdown -->
+        <h3 class="breakdown-title">Section Performance Breakdown</h3>
+        <div id="section-cards-grid" class="section-cards-grid"></div>
+
+        <!-- Actions / Excel Export Box -->
+        <div class="action-box">
+          <h3>Save &amp; Export Your Score</h3>
+          <p>Download your official assessment report in Microsoft Excel (.xlsx) format containing complete summary metrics and itemized responses.</p>
+          <div class="action-buttons-group">
+            <button id="btn-download-excel" class="btn btn-excel">
+              📊 Download Score in Excel (.xlsx)
+            </button>
+            <button id="btn-retake-quiz" class="btn btn-secondary">
+              🔄 Retake Test
+            </button>
+          </div>
+        </div>
+
+        <!-- Detailed Question Review -->
+        <div class="review-section">
+          <div class="review-header-row">
+            <h3 style="font-size: 1.25rem; font-weight: 800;">Detailed Question Review &amp; Explanations</h3>
+            <div class="review-filter-tabs">
+              <button class="tab-btn active" data-filter="all">All (30)</button>
+              <button class="tab-btn" data-filter="correct">Correct</button>
+              <button class="tab-btn" data-filter="incorrect">Incorrect</button>
+            </div>
+          </div>
+          <div id="review-items-list" class="review-items-list"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADMIN & SAVED SUBMISSIONS -->
+  <div id="admin-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h2 style="font-size: 1.3rem; font-weight: 800;">Saved Assessment Submissions</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Historical test submissions recorded in this browser session.</p>
+        </div>
+        <button id="btn-close-modal" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="submissions-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Grade</th>
+              <th>Contact</th>
+              <th>Score</th>
+              <th>Date / Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="submissions-tbody"></tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 12px;">
+        <button id="btn-clear-submissions" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+          🗑 Clear All Records
+        </button>
+        <button id="btn-export-all-excel" class="btn btn-excel">
+          📥 Export All Submissions to Master Excel (.xlsx)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; EdMissions. All rights reserved. • Hosted statically on GitHub Pages</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="quiz-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
