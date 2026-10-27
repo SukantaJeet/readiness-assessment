@@ -80,6 +80,17 @@ body {
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
 }
 
+.brand-logo-img {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  background: #ffffff;
+  padding: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border);
+}
+
 .brand-title {
   font-weight: 700;
   font-size: 1.15rem;
@@ -217,6 +228,23 @@ body {
   border-radius: var(--radius-md);
   color: white;
   margin-bottom: 28px;
+}
+
+.hero-logo-wrap {
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-logo-img {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #ffffff;
+  padding: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
 .hero-banner h1 {
